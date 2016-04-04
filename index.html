@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>World Map - Click to Select Country</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+    </style>
+  </head>
+  <body>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+    <script src="js/datamaps.world.min.js"></script>
+    <div id="container" style="position: relative; width: 100%; height: 100%;"></div>
+    <script>
+        var dataset = {};
+
+        var fillColor = "rgba(110, 133, 144, 1)"; // "rgba(156, 189, 205, 1)";
+        var strokeColor = "#FDFDFD"; // "rgb(92, 125, 141)";
+        var defaultFillColor = "rgba(156, 189, 205, 0.5)"; // "rgb(192, 232, 253)";
+        var defaultStrokeColor = "#FDFDFD";
+
+        var map = new Datamap({
+          element: document.getElementById('container'),
+          fills: {
+              defaultFill: defaultFillColor // Any hex, color name or rgb/rgba value
+          },
+          projection: 'mercator',
+          data: dataset,
+          responsive: true,
+          done: function(datamap) {
+              datamap.svg.selectAll('.datamaps-subunit').on('click', function(geography) {
+                var $this = d3.select(this);
+                var classes = this.getAttribute("class");
+
+                // toogle selected class
+                if (classes.indexOf("selected") !== -1) {
+                  this.setAttribute("class", classes.replace("selected", "").trim());
+
+                  delete dataset[geography.id];
+
+                  $this.style("fill", defaultFillColor);
+                  $this.style("stroke", defaultStrokeColor);
+                  $this.style("stroke-width", "1px");
+
+                  updatePreviousAttributes($this);
+                } else {
+                  this.setAttribute("class", classes + " selected");
+
+                  dataset[geography.id] = {
+                    fillColor: fillColor,
+                    strokeColor: strokeColor
+                  };
+
+                  $this.style("fill", fillColor);
+                  $this.style("stroke", strokeColor);
+                  $this.style("stroke-width", "1px");
+
+                  updatePreviousAttributes($this);
+                }
+
+                map.updateChoropleth(dataset, { reset: true });
+              });
+          }
+        });
+
+        d3.select(window).on('resize', function() {
+            map.resize();
+        });
+
+        function updatePreviousAttributes($this) {
+          var previousAttributes = {
+            'fill':  $this.style('fill'),
+            'stroke': $this.style('stroke'),
+            'stroke-width': $this.style('stroke-width'),
+            'fill-opacity': $this.style('fill-opacity')
+          };
+
+          $this.attr('data-previousAttributes', JSON.stringify(previousAttributes));
+        }
+    </script>
+  </body>
+</html>
